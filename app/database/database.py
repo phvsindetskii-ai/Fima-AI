@@ -32,6 +32,14 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
+            await db.execute("""
+            CREATE TABLE IF NOT EXISTS memories(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                key TEXT,
+                value TEXT
+            )
+            """)
 
             await db.commit()
 
@@ -125,5 +133,28 @@ class Database:
 
             await db.commit()
 
+async def save_memory(self, user_id: int, key: str, value: str):
+    async with await self.connect() as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO memories(user_id, key, value)
+            VALUES (?, ?, ?)
+            """,
+            (user_id, key, value),
+        )
+        await db.commit()
+
+
+async def get_memories(self, user_id: int):
+    async with await self.connect() as db:
+        cursor = await db.execute(
+            """
+            SELECT key, value
+            FROM memories
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+        return await cursor.fetchall()
 
 database = Database()
