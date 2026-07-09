@@ -1,13 +1,10 @@
-from aiogram import Router
-from aiogram.filters import CommandStart
-from aiogram.types import Message
+from telegram import Update
+from telegram.ext import ContextTypes
 
-router = Router()
 
-@router.message(CommandStart())
-async def start_command(message: Message):
-    await message.answer(
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
         "👋 Привет!\n\n"
-        "Я Фима-ИИ.\n"
-        "Напиши мне любое сообщение, и я отвечу с помощью Gemini AI."
+        "Я FIMA AI.\n"
+        "Напиши любой вопрос, и я отвечу с помощью Gemini."
     )
