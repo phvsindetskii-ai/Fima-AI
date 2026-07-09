@@ -32,6 +32,7 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
+
             await db.execute("""
             CREATE TABLE IF NOT EXISTS memories(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,8 +65,9 @@ class Database:
                 ),
             )
 
-            await db.commit() 
-        async def save_message(
+            await db.commit()
+
+    async def save_message(
         self,
         user_id: int,
         role: str,
@@ -88,7 +90,7 @@ class Database:
 
             await db.commit()
 
-    async def get_history(
+     async def get_history(
         self,
         user_id: int,
         limit: int = 10,
@@ -110,7 +112,6 @@ class Database:
             )
 
             rows = await cursor.fetchall()
-
             rows.reverse()
 
             return rows
@@ -126,63 +127,84 @@ class Database:
                 DELETE FROM messages
                 WHERE user_id = ?
                 """,
-                (
-                    user_id,
-                ),
+                (user_id,),
             )
 
             await db.commit()
 
-async def save_memory(self, user_id: int, key: str, value: str):
-    async with await self.connect() as db:
+    async def save_memory(
+        self,
+        user_id: int,
+        key: str,
+        value: str,
+    ):
+        async with await self.connect() as db:
 
-        cursor = await db.execute(
-            """
-            SELECT id
-            FROM memories
-            WHERE user_id = ?
-            AND key = ?
-            """,
-            (user_id, key),
-        )
-
-        exists = await cursor.fetchone()
-
-        if exists:
-
-            await db.execute(
+            cursor = await db.execute(
                 """
-                UPDATE memories
-                SET value = ?
+                SELECT id
+                FROM memories
                 WHERE user_id = ?
                 AND key = ?
                 """,
-                (value, user_id, key),
+                (
+                    user_id,
+                    key,
+                ),
             )
 
-        else:
+            exists = await cursor.fetchone()
 
-            await db.execute(
+            if exists:
+
+                await db.execute(
+                    """
+                    UPDATE memories
+                    SET value = ?
+                    WHERE user_id = ?
+                    AND key = ?
+                    """,
+                    (
+                        value,
+                        user_id,
+                        key,
+                    ),
+                )
+
+            else:
+
+                await db.execute(
+                    """
+                    INSERT INTO memories
+                    (user_id, key, value)
+                    VALUES (?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        key,
+                        value,
+                    ),
+                )
+
+            await db.commit()
+
+    async def get_memories(
+        self,
+        user_id: int,
+    ):
+        async with await self.connect() as db:
+
+            cursor = await db.execute(
                 """
-                INSERT INTO memories(user_id, key, value)
-                VALUES (?, ?, ?)
+                SELECT key, value
+                FROM memories
+                WHERE user_id = ?
                 """,
-                (user_id, key, value),
+                (user_id,),
             )
 
-        await db.commit()
+            return await cursor.fetchall()
 
-
-async def get_memories(self, user_id: int):
-    async with await self.connect() as db:
-        cursor = await db.execute(
-            """
-            SELECT key, value
-            FROM memories
-            WHERE user_id = ?
-            """,
-            (user_id,),
-        )
-        return await cursor.fetchall()
 
 database = Database()
+            
