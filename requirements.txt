@@ -4,3 +4,4 @@ python-dotenv
 aiosqlite
 httpx
 uvicorn
+fastapi
