@@ -33,44 +33,7 @@ def extract_json(text: str):
         return None
 
 
-async def save_memory(self, user_id: int, key: str, value: str):
-    async with await self.connect() as db:
-
-        cursor = await db.execute(
-            """
-            SELECT id
-            FROM memories
-            WHERE user_id = ?
-            AND key = ?
-            """,
-            (user_id, key)
-        )
-
-        exists = await cursor.fetchone()
-
-        if exists:
-
-            await db.execute(
-                """
-                UPDATE memories
-                SET value = ?
-                WHERE user_id = ?
-                AND key = ?
-                """,
-                (value, user_id, key)
-            )
-
-        else:
-
-            await db.execute(
-                """
-                INSERT INTO memories(user_id,key,value)
-                VALUES(?,?,?)
-                """,
-                (user_id, key, value)
-            )
-
-        await db.commit()
+async def save_memories(user_id: int, text: str):
 
     prompt = f"""
 Ты анализируешь сообщение пользователя.
