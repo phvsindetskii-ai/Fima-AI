@@ -1,15 +1,29 @@
-from aiogram import Router
-from aiogram.types import Message
+from telegram import Update
+from telegram.ext import ContextTypes
 
-from ИИ.gemini import ask_gemini
-
-router = Router()
+from app.ai.gemini import ask_gemini
 
 
-@router.message()
-async def chat(message: Message):
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+
     try:
-        response = await ask_gemini(message.text)
-        await message.answer(response)
-    except Exception:
-        await message.answer("❌ Произошла ошибка. Попробуй позже.")
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id,
+            action="typing",
+        )
+
+        answer = await ask_gemini(
+            user_id=update.effective_user.id,
+            text=update.message.text,
+        )
+
+        await update.message.reply_text(answer)
+
+    except Exception as e:
+        print(f"Chat error: {e}")
+
+        await update.message.reply_text(
+            "❌ Произошла ошибка. Попробуй еще раз."
+        )
